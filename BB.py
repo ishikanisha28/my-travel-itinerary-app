@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import os
 import streamlit as st
 import openai
+from openai import OpenAIError  # ✅ Import OpenAIError directly
 from fpdf import FPDF
 import unicodedata
 
@@ -48,7 +46,7 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
             ]
         )
         return response["choices"][0]["message"]["content"]
-    except openai.error.OpenAIError as e:
+    except OpenAIError as e:  # ✅ Updated error handling
         return f"⚠️ Unable to generate itinerary. Error: {str(e)}"
 
 # ✅ Function to remove non-ASCII characters
@@ -124,10 +122,3 @@ def main():
 # ✅ Run the main function
 if __name__ == "__main__":
     main()
-
-
-# In[ ]:
-
-
-
-
