@@ -8,7 +8,11 @@ from fpdf import FPDF
 import unicodedata
 
 # ✅ Fetch OpenAI API Key from environment variable
-api_key = st.secrets["OPENAI_API_KEY"]
+api_key = st.secrets.get("OPENAI_API_KEY")
+
+if not api_key:
+    st.error("⚠️ ERROR: OpenAI API Key is missing or not set properly in Secrets!")
+    st.stop()
 
 # ✅ Set OpenAI API Key properly
 openai.api_key = api_key
@@ -46,8 +50,17 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
             ]
         )
         return response["choices"][0]["message"]["content"]
-    except openai.error.OpenAIError as e:
-        return f"⚠️ Unable to generate itinerary. Error: {str(e)}"
+    except openai.InvalidRequestError as e:
+        st.error(f"⚠️ Invalid Request Error: {str(e)}")
+    except openai.AuthenticationError as e:
+        st.error(f"⚠️ Authentication Error: {str(e)}")
+    except openai.APIError as e:
+        st.error(f"⚠️ API Error: {str(e)}")
+    except openai.OpenAIError as e:
+        st.error(f"⚠️ OpenAI Error: {str(e)}")
+    except Exception as e:
+        st.error(f"⚠️ Unexpected Error: {str(e)}")
+    return None
 
 # ✅ Function to remove non-ASCII characters
 def remove_non_ascii(text):
@@ -101,9 +114,10 @@ def main():
         if location.strip():
             st.session_state["itinerary"] = None  # ✅ Reset stored itinerary
             itinerary = generate_itinerary(location, days, month, budget, activities, travel_companion)
-            st.session_state["itinerary"] = itinerary
-            st.success("✅ Here is your itinerary:")
-            st.markdown(itinerary)
+            if itinerary:
+                st.session_state["itinerary"] = itinerary
+                st.success("✅ Here is your itinerary:")
+                st.markdown(itinerary)
         else:
             st.warning("⚠️ Please enter a valid location.")
 
