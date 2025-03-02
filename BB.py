@@ -38,7 +38,7 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Corrected: Using openai.Completion.create for SDK 1.0.0
+        # ✅ Using openai.Completion.create for SDK 1.0.0
         response = openai.Completion.create(
             model="text-davinci-003",  # Use GPT-3 model as per SDK 1.0.0
             prompt=prompt,
@@ -47,21 +47,10 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         )
         # ✅ Correct way to access response content
         return response.choices[0].text.strip()
-    except openai.error.OpenAIError as e:
-        st.error(f"⚠️ OpenAI API Error: {str(e)}")
-        return None
-    except openai.error.APIConnectionError as e:
-        st.error(f"⚠️ Connection Error: {str(e)}")
-        return None
-    except openai.error.AuthenticationError as e:
-        st.error(f"⚠️ Authentication Error: {str(e)}")
-        return None
-    except openai.error.RateLimitError as e:
-        st.error(f"⚠️ Rate Limit Exceeded: {str(e)}")
-        return None
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
         return None
+        
 
 # ✅ Function to remove non-ASCII characters
 def remove_non_ascii(text):
