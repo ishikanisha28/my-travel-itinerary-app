@@ -11,7 +11,7 @@ from fpdf import FPDF
 import unicodedata
 
 # ✅ Fetch OpenAI API Key from environment variable
-api_key = st.getenv("OPENAI_API_KEY")
+api_key = st.secrets["OPENAI_API_KEY"]
 
 # ✅ Set OpenAI API Key properly
 openai.api_key = api_key
