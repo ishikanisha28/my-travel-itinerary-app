@@ -50,10 +50,12 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         )
         # ✅ Correct way to access response content
         return response['choices'][0]['message']['content'].strip()
-    except openai.error.OpenAIError as e:
+
+    except openai.OpenAIError as e:
         st.error(f"⚠️ OpenAI API Error: {str(e)}")
         print(f"OpenAI API Error: {str(e)}")  # ✅ Logs error to Streamlit console
         return None
+
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
         print(f"Unexpected Error: {str(e)}")  # ✅ Logs error to Streamlit console
@@ -104,7 +106,7 @@ def main():
     # ✅ Customization options
     budget = st.selectbox("💸 Choose your budget level:", ["Budget", "Mid-range", "Luxury"])
     activities = st.multiselect("🎯 Choose activities you like:", ["Adventure", "Relaxation", "Cultural", "Sightseeing", "Food Tour"])
-    travel_companion = st.selectbox("👥 Who are you traveling with?", ["Solo", "Couple", "Family", "Friends"])
+    travel_companion = st.selectbox("👥 Who are you traveling with:", ["Solo", "Couple", "Family", "Friends"])
 
     # ✅ Generate itinerary when button is clicked
     if st.button("🚀 Generate Itinerary"):
