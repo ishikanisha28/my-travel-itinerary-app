@@ -47,11 +47,11 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         )
         # ✅ Correct way to access response content
         return response.choices[0].text.strip()
-    except openai.error.InvalidRequestError as e:
-        st.error(f"⚠️ Invalid Request: {str(e)}")
+    except openai.error.OpenAIError as e:
+        st.error(f"⚠️ OpenAI API Error: {str(e)}")
         return None
-    except openai.error.APIError as e:
-        st.error(f"⚠️ API Error: {str(e)}")
+    except openai.error.APIConnectionError as e:
+        st.error(f"⚠️ Connection Error: {str(e)}")
         return None
     except openai.error.AuthenticationError as e:
         st.error(f"⚠️ Authentication Error: {str(e)}")
