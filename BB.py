@@ -38,7 +38,7 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Updated: Using openai.ChatCompletion.create for SDK 1.65.2
+        # ✅ Using openai.ChatCompletion.create for SDK 0.28.0
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Change to "gpt-4" if you have access
             messages=[
@@ -51,7 +51,7 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         # ✅ Correct way to access response content
         return response['choices'][0]['message']['content'].strip()
 
-    except openai.OpenAIError as e:
+    except openai.error.OpenAIError as e:
         st.error(f"⚠️ OpenAI API Error: {str(e)}")
         print(f"OpenAI API Error: {str(e)}")  # ✅ Logs error to Streamlit console
         return None
