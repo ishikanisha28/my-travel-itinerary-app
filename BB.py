@@ -38,19 +38,33 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Using openai.Completion.create for SDK 1.0.0
-        response = openai.Completion.create(
-            model="text-davinci-003",  # Use GPT-3 model as per SDK 1.0.0
-            prompt=prompt,
+        # ✅ Updated: Using openai.Chat.completions.create for SDK 1.0.0+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # or "gpt-4" if you have access
+            messages=[
+                {"role": "system", "content": "You are a helpful travel assistant."},
+                {"role": "user", "content": prompt}
+            ],
             max_tokens=1500,
             temperature=0.7
         )
         # ✅ Correct way to access response content
-        return response.choices[0].text.strip()
+        return response['choices'][0]['message']['content'].strip()
+    except openai.error.APIConnectionError as e:
+        st.error(f"⚠️ Connection Error: {str(e)}")
+        return None
+    except openai.error.AuthenticationError as e:
+        st.error(f"⚠️ Authentication Error: {str(e)}")
+        return None
+    except openai.error.RateLimitError as e:
+        st.error(f"⚠️ Rate Limit Exceeded: {str(e)}")
+        return None
+    except openai.error.InvalidRequestError as e:
+        st.error(f"⚠️ Invalid Request: {str(e)}")
+        return None
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
         return None
-        
 
 # ✅ Function to remove non-ASCII characters
 def remove_non_ascii(text):
@@ -97,7 +111,7 @@ def main():
     # ✅ Customization options
     budget = st.selectbox("💸 Choose your budget level:", ["Budget", "Mid-range", "Luxury"])
     activities = st.multiselect("🎯 Choose activities you like:", ["Adventure", "Relaxation", "Cultural", "Sightseeing", "Food Tour"])
-    travel_companion = st.selectbox("👥 Who are you traveling with:", ["Solo", "Couple", "Family", "Friends"])
+    travel_companion = st.selectbox("👥 Who are you traveling with?", ["Solo", "Couple", "Family", "Friends"])
 
     # ✅ Generate itinerary when button is clicked
     if st.button("🚀 Generate Itinerary"):
