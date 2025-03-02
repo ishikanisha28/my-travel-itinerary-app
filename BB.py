@@ -41,26 +41,21 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Corrected: Using ChatCompletion instead of non-existent functions.invoke
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        # ✅ Corrected: Using openai.Chat to match version 1.65.2
+        response = openai.Chat.create(
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful travel assistant."},
                 {"role": "user", "content": prompt}
             ]
         )
-        return response["choices"][0]["message"]["content"]
-    except openai.InvalidRequestError as e:
-        st.error(f"⚠️ Invalid Request Error: {str(e)}")
-    except openai.AuthenticationError as e:
-        st.error(f"⚠️ Authentication Error: {str(e)}")
-    except openai.APIError as e:
-        st.error(f"⚠️ API Error: {str(e)}")
+        return response.choices[0].message.content
     except openai.OpenAIError as e:
         st.error(f"⚠️ OpenAI Error: {str(e)}")
+        return None
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
-    return None
+        return None
 
 # ✅ Function to remove non-ASCII characters
 def remove_non_ascii(text):
