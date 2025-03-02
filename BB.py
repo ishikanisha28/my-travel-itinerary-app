@@ -38,17 +38,26 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        response = openai.Completion.create(
-            model="text-davinci-003",
-            prompt=prompt,
+        # ✅ Using gpt-3.5-turbo for up-to-date model
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful travel assistant."},
+                {"role": "user", "content": prompt}
+            ],
             max_tokens=1500,
             temperature=0.7
         )
-        return response.choices[0].text.strip()
+        return response['choices'][0]['message']['content'].strip()
+
+    except openai.error.OpenAIError as e:  # ✅ Error handling for OpenAI API errors
+        st.error(f"⚠️ OpenAI API Error: {str(e)}")
+        print(f"OpenAI API Error: {str(e)}")  # ✅ Logs error to Streamlit console
+        return None
 
     except Exception as e:
-        st.error(f"⚠️ Error: {str(e)}")
-        print(f"Error: {str(e)}")
+        st.error(f"⚠️ Unexpected Error: {str(e)}")
+        print(f"Unexpected Error: {str(e)}")  # ✅ Logs error to Streamlit console
         return None
 
 # ✅ Function to remove non-ASCII characters
