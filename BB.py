@@ -38,14 +38,13 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful travel assistant."},
-                {"role": "user", "content": prompt}
-            ]
+        response = openai.Completion.create(
+            model="text-davinci-003",  # ✅ Use the updated model name
+            prompt=prompt,
+            max_tokens=2000,  # ✅ Adjust tokens as needed
+            temperature=0.7  # ✅ Adjust temperature for creativity
         )
-        return response["choices"][0]["message"]["content"]
+        return response["choices"][0]["text"].strip()
     except OpenAIError as e:  # ✅ Updated error handling
         return f"⚠️ Unable to generate itinerary. Error: {str(e)}"
 
