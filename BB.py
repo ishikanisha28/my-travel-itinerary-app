@@ -41,18 +41,18 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Corrected: Using function-based API approach
-        response = openai.functions.invoke(
-            function="chat",
-            model="gpt-4",
+        # ✅ Corrected: Using openai.ChatCompletion.create
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Change to "gpt-4" if you have access
             messages=[
                 {"role": "system", "content": "You are a helpful travel assistant."},
                 {"role": "user", "content": prompt}
             ]
         )
-        return response["choices"][0]["message"]["content"]
-    except openai.OpenAIError as e:
-        st.error(f"⚠️ OpenAI Error: {str(e)}")
+        # ✅ Correct way to access response content
+        return response['choices'][0]['message']['content']
+    except openai.error.OpenAIError as e:
+        st.error(f"⚠️ OpenAI API Error: {str(e)}")
         return None
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
