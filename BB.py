@@ -38,9 +38,9 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Updated: Using openai.Chat.completions.create for SDK 1.0.0+
+        # ✅ Updated: Using openai.ChatCompletion.create for SDK 1.65.2
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # or "gpt-4" if you have access
+            model="gpt-3.5-turbo",  # Change to "gpt-4" if you have access
             messages=[
                 {"role": "system", "content": "You are a helpful travel assistant."},
                 {"role": "user", "content": prompt}
@@ -50,20 +50,13 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         )
         # ✅ Correct way to access response content
         return response['choices'][0]['message']['content'].strip()
-    except openai.error.APIConnectionError as e:
-        st.error(f"⚠️ Connection Error: {str(e)}")
-        return None
-    except openai.error.AuthenticationError as e:
-        st.error(f"⚠️ Authentication Error: {str(e)}")
-        return None
-    except openai.error.RateLimitError as e:
-        st.error(f"⚠️ Rate Limit Exceeded: {str(e)}")
-        return None
-    except openai.error.InvalidRequestError as e:
-        st.error(f"⚠️ Invalid Request: {str(e)}")
+    except openai.error.OpenAIError as e:
+        st.error(f"⚠️ OpenAI API Error: {str(e)}")
+        print(f"OpenAI API Error: {str(e)}")  # ✅ Logs error to Streamlit console
         return None
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
+        print(f"Unexpected Error: {str(e)}")  # ✅ Logs error to Streamlit console
         return None
 
 # ✅ Function to remove non-ASCII characters
