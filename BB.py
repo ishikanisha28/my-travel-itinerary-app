@@ -41,15 +41,16 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Corrected: Using openai.Chat to match version 1.65.2
-        response = openai.ChatCompletion.create(
+        # ✅ Corrected: Using function-based API approach
+        response = openai.functions.invoke(
+            function="chat",
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful travel assistant."},
                 {"role": "user", "content": prompt}
             ]
         )
-        return response.choices[0].message.content
+        return response["choices"][0]["message"]["content"]
     except openai.OpenAIError as e:
         st.error(f"⚠️ OpenAI Error: {str(e)}")
         return None
