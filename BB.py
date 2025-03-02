@@ -13,10 +13,6 @@ import unicodedata
 # ✅ Fetch OpenAI API Key from environment variable
 api_key = st.getenv("OPENAI_API_KEY")
 
-if not api_key:
-    st.error("⚠️ ERROR: OpenAI API Key is missing! Set it using environment variables.")
-    st.stop()
-
 # ✅ Set OpenAI API Key properly
 openai.api_key = api_key
 
