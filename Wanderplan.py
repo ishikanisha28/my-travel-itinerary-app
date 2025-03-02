@@ -20,7 +20,7 @@ st.set_page_config(page_title="Wanderplanner", layout="wide")
 # ✅ Sidebar content
 st.sidebar.title("ℹ️ About This Program")
 st.sidebar.info(
-    "**Travel Itinerary Generator**\n\n"
+    "**Wanderplanner**\n\n"
     "🔹 Uses AI to create customized travel plans.\n\n"
     "🔹 Generates detailed itineraries with activity and food suggestions.\n\n"
     "🔹 Download itineraries directly as PDF files.\n\n"
