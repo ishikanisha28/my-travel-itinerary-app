@@ -4,7 +4,6 @@
 import os
 import streamlit as st
 import openai
-from openai import OpenAIError  # ✅ Import OpenAIError directly
 from fpdf import FPDF
 import unicodedata
 
@@ -27,7 +26,7 @@ st.sidebar.info(
     "_Plan your perfect trip effortlessly!_"
 )
 
-# ✅ Function to generate itinerary using OpenAI API with new API
+# ✅ Function to generate itinerary using OpenAI API with custom options
 def generate_itinerary(location, days, month, budget, activities, travel_companion):
     activity_str = ", ".join(activities) if activities else "any"
     prompt = (
@@ -38,18 +37,16 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         "Avoid displaying prices."
     )
     try:
-        # ✅ Use openai.Functions for latest API compatibility
-        response = openai.functions.invoke(
-            model="gpt-4-turbo",
-            function="text_completion",
-            arguments={
-                "prompt": prompt,
-                "max_tokens": 2000,
-                "temperature": 0.7
-            }
+        # ✅ Corrected: Using ChatCompletion instead of non-existent functions.invoke
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful travel assistant."},
+                {"role": "user", "content": prompt}
+            ]
         )
-        return response["result"]
-    except OpenAIError as e:  # ✅ Updated error handling
+        return response["choices"][0]["message"]["content"]
+    except openai.error.OpenAIError as e:
         return f"⚠️ Unable to generate itinerary. Error: {str(e)}"
 
 # ✅ Function to remove non-ASCII characters
