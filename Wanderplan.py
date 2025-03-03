@@ -15,12 +15,12 @@ if not api_key:
 openai.api_key = api_key
 
 # ✅ Set page configuration
-st.set_page_config(page_title="Wanderplanner", layout="wide")
+st.set_page_config(page_title="Wanderplan", layout="wide")
 
 # ✅ Sidebar content
 st.sidebar.title("ℹ️ About This Program")
 st.sidebar.info(
-    "**Wanderplanner**\n\n"
+    "**Wanderplan**\n\n"
     "🔹 Uses AI to create customized travel plans.\n\n"
     "🔹 Generates detailed itineraries with activity and food suggestions.\n\n"
     "🔹 Download itineraries directly as PDF files.\n\n"
@@ -45,19 +45,34 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
                 {"role": "system", "content": "You are a helpful travel assistant."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=1500,
+            max_tokens=2000,  # ✅ Increased token limit for detailed responses
             temperature=0.7
         )
         return response['choices'][0]['message']['content'].strip()
 
-    except openai.error.OpenAIError as e:  # ✅ Error handling for OpenAI API errors
+    except openai.error.APIConnectionError as e:
+        st.error("⚠️ Network error: Unable to connect to OpenAI API. Please check your internet connection.")
+        print(f"APIConnectionError: {str(e)}")
+        return None
+
+    except openai.error.InvalidRequestError as e:
+        st.error("⚠️ Invalid request: Please check your inputs.")
+        print(f"InvalidRequestError: {str(e)}")
+        return None
+
+    except openai.error.AuthenticationError as e:
+        st.error("⚠️ Authentication error: Please check your API key.")
+        print(f"AuthenticationError: {str(e)}")
+        return None
+
+    except openai.error.OpenAIError as e:
         st.error(f"⚠️ OpenAI API Error: {str(e)}")
-        print(f"OpenAI API Error: {str(e)}")  # ✅ Logs error to Streamlit console
+        print(f"OpenAI API Error: {str(e)}")
         return None
 
     except Exception as e:
         st.error(f"⚠️ Unexpected Error: {str(e)}")
-        print(f"Unexpected Error: {str(e)}")  # ✅ Logs error to Streamlit console
+        print(f"Unexpected Error: {str(e)}")
         return None
 
 # ✅ Function to remove non-ASCII characters
@@ -86,7 +101,7 @@ def create_pdf(itinerary, location, days, month):
 
 # ✅ Main application logic
 def main():
-    st.title("🌍 Travel Itinerary Generator ✈️")
+    st.title("🌍 Wanderplan ✈️")
     st.subheader("Plan your perfect trip with AI!")
 
     # Initialize session state for itinerary if not present
@@ -105,7 +120,7 @@ def main():
     # ✅ Customization options
     budget = st.selectbox("💸 Choose your budget level:", ["Budget", "Mid-range", "Luxury"])
     activities = st.multiselect("🎯 Choose activities you like:", ["Adventure", "Relaxation", "Cultural", "Sightseeing", "Food Tour"])
-    travel_companion = st.selectbox("👥 Who are you traveling with:", ["Solo", "Couple", "Family", "Friends"])
+    travel_companion = st.selectbox("👥 Who are you traveling with?", ["Solo", "Couple", "Family", "Friends"])
 
     # ✅ Generate itinerary when button is clicked
     if st.button("🚀 Generate Itinerary"):
