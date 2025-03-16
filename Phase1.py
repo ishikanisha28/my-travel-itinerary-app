@@ -3,8 +3,8 @@ import openai
 from fpdf import FPDF
 import unicodedata
 
-# ✅ Initialize OpenAI Client (For openai v1.66.3)
-client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# ✅ Correct OpenAI Client Initialization (v1.66.3+)
+client = openai.Client(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ✅ Set page configuration
 st.set_page_config(page_title="Travel Itinerary Generator", layout="wide")
@@ -13,12 +13,13 @@ st.set_page_config(page_title="Travel Itinerary Generator", layout="wide")
 st.sidebar.title("ℹ️ About This Program")
 st.sidebar.info(
     "**Travel Itinerary Generator**\n\n"
-    "🔹 AI-generated travel plans tailored to your style.\n"
-    "🔹 Explore activities, food, and hidden gems.\n"
-    "🔹 Download as PDF. Hassle-free planning! ✨"
+    "🔹 Uses AI (GPT-4 Turbo) to create personalized travel plans.\n"
+    "🔹 Detailed activities, food recommendations, offbeat spots.\n"
+    "🔹 Download as PDF – no font errors!\n\n"
+    "_Plan your dream trip effortlessly!_"
 )
 
-# ✅ Function to generate high-quality itinerary with GPT-4 Turbo
+# ✅ Function to generate itinerary using OpenAI API (GPT-4 Turbo)
 def generate_itinerary(location, days, month, budget, activities, travel_companion):
     activity_str = ", ".join(activities) if activities else "any"
     prompt = (
@@ -32,7 +33,7 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are an expert travel planner. Write engaging, structured itineraries."},
+                {"role": "system", "content": "You are an expert travel planner who creates structured and engaging itineraries."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7
@@ -46,16 +47,13 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
 def remove_non_ascii(text):
     return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
 
-# ✅ Create PDF with built-in font (no DejaVuSans needed)
+# ✅ Function to create PDF (uses built-in Arial font)
 def create_pdf(itinerary, location, days, month):
     pdf = FPDF()
     pdf.add_page()
-
-    # ✅ Use only built-in Arial font to avoid font file errors
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(200, 10, txt=f"{days}-Day Itinerary for {location} ({month})", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"{days}-Day Travel Itinerary for {location} ({month})", ln=True, align='C')
     pdf.ln(10)
-
     itinerary_clean = remove_non_ascii(itinerary)
     pdf.set_font("Arial", size=12)
     pdf.multi_cell(0, 10, itinerary_clean)
@@ -69,7 +67,7 @@ def main():
     if "itinerary" not in st.session_state:
         st.session_state["itinerary"] = None
 
-    # User inputs
+    # Inputs
     location = st.text_input("📍 Where are you going?")
     days = st.number_input("📅 Trip Length (1-7 days):", min_value=1, max_value=7, value=3)
     month = st.selectbox("🗓️ Travel Month:", 
