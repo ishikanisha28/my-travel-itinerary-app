@@ -3,37 +3,37 @@ import openai
 from fpdf import FPDF
 import unicodedata
 
-# ✅ Correct Client Initialization for v1.66.3
+# ✅ Initialize OpenAI Client (v1.66.3)
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# ✅ Set page configuration
+# ✅ Set Streamlit page config
 st.set_page_config(page_title="Travel Itinerary Generator", layout="wide")
 
-# ✅ Sidebar content
-st.sidebar.title("ℹ️ About This Program")
+# ✅ Sidebar info
+st.sidebar.title("ℹ️ About This App")
 st.sidebar.info(
     "**Travel Itinerary Generator**\n\n"
-    "🔹 Uses AI (GPT-4 Turbo) to create personalized travel plans.\n"
-    "🔹 Detailed activities, food recommendations, offbeat spots.\n"
-    "🔹 Download as PDF – no font errors!\n\n"
-    "_Plan your dream trip effortlessly!_"
+    "🔹 Powered by GPT-4 Turbo AI\n"
+    "🔹 Customized travel plans: Activities + Food + Timings\n"
+    "🔹 Download as PDF — no font errors\n\n"
+    "_Plan your perfect trip with ease!_"
 )
 
-# ✅ Function to generate itinerary using OpenAI API (GPT-4 Turbo)
+# ✅ Generate Itinerary Function (GPT-4 Turbo)
 def generate_itinerary(location, days, month, budget, activities, travel_companion):
     activity_str = ", ".join(activities) if activities else "any"
     prompt = (
         f"Create a detailed {days}-day travel itinerary for {location} in {month}. "
-        f"Budget level: {budget}. Preferred activities: {activity_str}. "
-        f"Traveler type: {travel_companion}. "
-        "Include morning, afternoon, and evening plans with specific times and local food suggestions. "
-        "Mix popular and offbeat places. Format it with day-wise headings, bullet points, and no prices."
+        f"Budget: {budget}. Preferred activities: {activity_str}. "
+        f"Traveling with: {travel_companion}. "
+        "Include morning, afternoon, and evening plans with times and local food suggestions. "
+        "Cover both popular and offbeat places. Format it day-wise, use bullet points. No prices."
     )
     try:
         response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are an expert travel planner who creates structured and engaging itineraries."},
+                {"role": "system", "content": "You are an expert travel planner who creates engaging, detailed itineraries."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7
@@ -43,11 +43,11 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         st.error(f"⚠️ Error generating itinerary: {str(e)}")
         return None
 
-# ✅ Function to clean text for PDF
+# ✅ Remove non-ASCII characters for PDF
 def remove_non_ascii(text):
     return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
 
-# ✅ Function to create PDF (uses built-in Arial font)
+# ✅ Create PDF Function (uses built-in Arial font — no font errors)
 def create_pdf(itinerary, location, days, month):
     pdf = FPDF()
     pdf.add_page()
@@ -61,24 +61,24 @@ def create_pdf(itinerary, location, days, month):
 
 # ✅ Main Streamlit App
 def main():
-    st.title("🌍 AI Travel Itinerary Planner ✈️")
-    st.subheader("Craft your perfect trip — powered by GPT-4 Turbo")
+    st.title("🌍 AI Travel Itinerary Generator ✈️")
+    st.subheader("Plan your dream trip with GPT-4 Turbo!")
 
     if "itinerary" not in st.session_state:
         st.session_state["itinerary"] = None
 
     # Inputs
-    location = st.text_input("📍 Where are you going?")
+    location = st.text_input("📍 Destination:")
     days = st.number_input("📅 Trip Length (1-7 days):", min_value=1, max_value=7, value=3)
     month = st.selectbox("🗓️ Travel Month:", 
                          ["January", "February", "March", "April", "May", "June",
                           "July", "August", "September", "October", "November", "December"])
-    budget = st.selectbox("💸 Budget:", ["Budget", "Mid-range", "Luxury"])
+    budget = st.selectbox("💸 Budget Level:", ["Budget", "Mid-range", "Luxury"])
     activities = st.multiselect("🎯 Preferred Activities:", 
                                 ["Adventure", "Relaxation", "Cultural", "Sightseeing", "Food Tour"])
     travel_companion = st.selectbox("👥 Traveling With:", ["Solo", "Couple", "Family", "Friends"])
 
-    # Generate Itinerary
+    # Generate Button
     if st.button("🚀 Generate Itinerary"):
         if location.strip():
             st.session_state["itinerary"] = None
@@ -88,9 +88,9 @@ def main():
                 st.success("✅ Your itinerary is ready!")
                 st.markdown(itinerary)
         else:
-            st.warning("⚠️ Please enter a destination.")
+            st.warning("⚠️ Please enter a valid destination.")
 
-    # PDF Download Option
+    # PDF Download Button
     if st.session_state["itinerary"]:
         pdf_bytes = create_pdf(st.session_state["itinerary"], location, days, month)
         st.download_button("📥 Download PDF", data=pdf_bytes,
