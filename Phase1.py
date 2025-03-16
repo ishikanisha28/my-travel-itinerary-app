@@ -3,8 +3,8 @@ import openai
 from fpdf import FPDF
 import unicodedata
 
-# ✅ Correct OpenAI Client Initialization (v1.66.3+)
-client = openai.Client(api_key=st.secrets["OPENAI_API_KEY"])
+# ✅ Correct Client Initialization for v1.66.3
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ✅ Set page configuration
 st.set_page_config(page_title="Travel Itinerary Generator", layout="wide")
