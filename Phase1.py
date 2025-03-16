@@ -1,138 +1,102 @@
-import os
+from openai import OpenAI
 import streamlit as st
-import openai
-from openai import OpenAIError
 from fpdf import FPDF
+import unicodedata
 
-# ✅ Load OpenAI API Key securely
-api_key = st.secrets.get("OPENAI_API_KEY")
-if not api_key:
-    st.error("⚠️ OpenAI API Key missing in Streamlit Secrets!")
-    st.stop()
+# ✅ Initialize OpenAI client
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-openai.api_key = api_key
+# ✅ Set page configuration
+st.set_page_config(page_title="Travel Itinerary Generator", layout="wide")
 
-# ✅ Configure Streamlit page
-st.set_page_config(page_title="Wanderplan Travel Planner", layout="wide")
-
-# Sidebar info
-st.sidebar.title("ℹ️ About Wanderplan")
+# ✅ Sidebar content
+st.sidebar.title("ℹ️ About This Program")
 st.sidebar.info(
-    "**Wanderplan**\n\n"
-    "🔹 AI-powered travel plans using OpenAI.\n"
-    "🔹 Detailed itineraries with food, sights & local tips.\n"
-    "🔹 Multilingual support: Bengali, Hindi, Spanish...\n"
-    "🔹 Downloadable as PDF with Unicode fonts.\n\n"
-    "_Plan your perfect trip with AI!_"
+    "**Travel Itinerary Generator**\n\n"
+    "🔹 AI-powered travel plans tailored to your preferences.\n\n"
+    "🔹 Explore activities, food, and hidden gems.\n\n"
+    "🔹 Download your itinerary as a PDF.\n\n"
+    "_Plan your dream trip effortlessly!_"
 )
 
-# ✅ Generate detailed itinerary via OpenAI GPT
-def generate_itinerary(location, days, month, budget, activities, travel_companion, language):
+# ✅ Function to generate itinerary using OpenAI GPT-4 Turbo
+def generate_itinerary(location, days, month, budget, activities, travel_companion):
     activity_str = ", ".join(activities) if activities else "any"
     prompt = (
-        f"Create a detailed and high-quality {days}-day travel itinerary for {location} in {month} for a {budget} budget. "
-        f"Include well-planned morning, afternoon, and evening activities for each day. "
-        f"Include top attractions, hidden gems, local experiences, and food recommendations for each meal. "
-        f"Provide specific timings and helpful tips. "
-        f"Focus on {activity_str} activities for someone traveling {travel_companion}. "
-        f"Avoid showing prices. "
-        f"Make the itinerary feel like a guidebook with immersive descriptions. "
-        f"Respond in {language}."
+        f"Create a detailed {days}-day travel itinerary for {location} in {month}. "
+        f"Budget level: {budget}. Preferred activities: {activity_str}. "
+        f"Traveling with: {travel_companion}. "
+        "Include morning, afternoon, and evening plans with food suggestions and timings. "
+        "Mix popular and offbeat places. Avoid showing prices."
     )
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful travel assistant."},
+                {"role": "system", "content": "You are an expert travel planner. Create engaging, well-structured, day-wise itineraries."},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=3000,  # Increased for longer itineraries
-            temperature=0.8
+            temperature=0.7
         )
-        return response['choices'][0]['message']['content'].strip()
-    except OpenAIError as e:
+        return response.choices[0].message.content
+    except Exception as e:
         st.error(f"⚠️ OpenAI API Error: {str(e)}")
         return None
 
-# ✅ Create PDF with Unicode font for Bengali and more
-def create_pdf(itinerary, location, days, month, language):
+# ✅ Clean text for PDF
+def remove_non_ascii(text):
+    return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
+
+# ✅ Create downloadable PDF (no custom font)
+def create_pdf(itinerary, location, days, month):
     pdf = FPDF()
     pdf.add_page()
-
-    # Font selection for Bengali and others
-    if language == "Bengali":
-        font_path = "NotoSansBengali-Regular.ttf"
-        font_name = "NotoBengali"
-    else:
-        font_path = "DejaVuSans.ttf"
-        font_name = "DejaVu"
-
-    if not os.path.exists(font_path):
-        st.error(f"⚠️ Font file {font_path} not found in app directory.")
-        return None
-
-    pdf.add_font(font_name, '', font_path, uni=True)
-    pdf.set_font(font_name, size=12)
-
-    # Title
-    pdf.set_font(font_name, 'B', 16)
-    pdf.cell(200, 10, txt=f"{days}-Day Travel Itinerary for {location} in {month}", ln=True, align='C')
+    pdf.set_font("Arial", 'B', 16)
+    pdf.cell(200, 10, txt=f"{days}-Day Itinerary for {location} ({month})", ln=True, align='C')
     pdf.ln(10)
 
-    # Content
-    pdf.set_font(font_name, size=12)
-    pdf.multi_cell(0, 10, itinerary)
-
-    pdf_bytes = pdf.output(dest='S').encode('latin-1')
-    return pdf_bytes
+    itinerary_clean = remove_non_ascii(itinerary)
+    pdf.set_font("Arial", size=12)
+    pdf.multi_cell(0, 10, itinerary_clean)
+    return pdf.output(dest='S').encode('latin-1')
 
 # ✅ Main Streamlit App
 def main():
-    st.title("🌍 Wanderplan ✈️")
+    st.title("🌍 AI Travel Itinerary Generator ✈️")
     st.subheader("Plan your perfect trip with AI!")
 
     if "itinerary" not in st.session_state:
         st.session_state["itinerary"] = None
 
-    # Inputs
-    location = st.text_input("📍 Enter the location:")
-    days = st.number_input("📅 Number of days (1-7):", min_value=1, max_value=7, value=3)
-    month = st.selectbox("🗓️ Month of travel:", 
-                         ["January", "February", "March", "April", "May", "June", 
+    # User Inputs
+    location = st.text_input("📍 Destination:")
+    days = st.number_input("📅 Trip Length (1-7 days):", min_value=1, max_value=7, value=3)
+    month = st.selectbox("🗓️ Travel Month:",
+                         ["January", "February", "March", "April", "May", "June",
                           "July", "August", "September", "October", "November", "December"])
-    budget = st.selectbox("💸 Budget:", ["Budget", "Mid-range", "Luxury"])
-    activities = st.multiselect("🎯 Preferred activities:", 
+    budget = st.selectbox("💸 Budget Level:", ["Budget", "Mid-range", "Luxury"])
+    activities = st.multiselect("🎯 Preferred Activities:",
                                 ["Adventure", "Relaxation", "Cultural", "Sightseeing", "Food Tour"])
-    travel_companion = st.selectbox("👥 Traveling with:", ["Solo", "Couple", "Family", "Friends"])
-    language = st.selectbox("🌐 Language:", 
-                            ["English", "Spanish", "French", "German", "Hindi", "Bengali"])
+    travel_companion = st.selectbox("👥 Traveling With:", ["Solo", "Couple", "Family", "Friends"])
 
     # Generate Itinerary
     if st.button("🚀 Generate Itinerary"):
         if location.strip():
             st.session_state["itinerary"] = None
-            with st.spinner("Generating your perfect itinerary..."):
-                itinerary = generate_itinerary(location, days, month, budget, activities, travel_companion, language)
-                if itinerary:
-                    st.session_state["itinerary"] = itinerary
-                    st.success("✅ Your itinerary is ready!")
-                    st.markdown(itinerary)
+            itinerary = generate_itinerary(location, days, month, budget, activities, travel_companion)
+            if itinerary:
+                st.session_state["itinerary"] = itinerary
+                st.success("✅ Your itinerary is ready!")
+                st.markdown(itinerary)
         else:
-            st.warning("⚠️ Please enter a valid location.")
+            st.warning("⚠️ Please enter a destination.")
 
-    # Download PDF
+    # PDF Download Option
     if st.session_state["itinerary"]:
-        pdf_bytes = create_pdf(st.session_state["itinerary"], location, days, month, language)
-        if pdf_bytes:
-            st.download_button(
-                label="📥 Download Itinerary as PDF",
-                data=pdf_bytes,
-                file_name=f"{location}_Travel_Itinerary.pdf",
-                mime="application/pdf"
-            )
-    else:
-        st.info("Generate your itinerary to enable PDF download.")
+        pdf_bytes = create_pdf(st.session_state["itinerary"], location, days, month)
+        st.download_button("📥 Download PDF", data=pdf_bytes,
+                           file_name=f"{location}_Itinerary.pdf", mime="application/pdf")
 
-# ✅ Run the app
+# ✅ Run App
 if __name__ == "__main__":
     main()
