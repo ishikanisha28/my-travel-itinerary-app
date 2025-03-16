@@ -2,30 +2,32 @@ import streamlit as st
 import openai
 from fpdf import FPDF
 import unicodedata
+import os
 
-# ✅ Set OpenAI API Key for v1.66.3
+# ✅ OpenAI v1.66.3 API Key
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# ✅ Set Streamlit page config
+# ✅ Streamlit Page Config
 st.set_page_config(page_title="Travel Itinerary Generator", layout="wide")
 
-# ✅ Sidebar info
+# ✅ Sidebar Info
 st.sidebar.title("ℹ️ About This App")
 st.sidebar.info(
     "**Travel Itinerary Generator**\n\n"
     "🔹 Powered by GPT-4 Turbo\n"
-    "🔹 Customized travel plans: Activities + Food + Timings\n"
-    "🔹 Download as PDF — no font errors\n\n"
+    "🔹 Custom itineraries in your preferred language\n"
+    "🔹 Download itineraries as PDF (no font errors!)\n\n"
     "_Plan your perfect trip with ease!_"
 )
 
-# ✅ Generate Itinerary Function
-def generate_itinerary(location, days, month, budget, activities, travel_companion):
+# ✅ Generate Itinerary with Language
+def generate_itinerary(location, days, month, budget, activities, travel_companion, language):
     activity_str = ", ".join(activities) if activities else "any"
     prompt = (
         f"Create a detailed {days}-day travel itinerary for {location} in {month}. "
         f"Budget: {budget}. Preferred activities: {activity_str}. "
         f"Traveling with: {travel_companion}. "
+        f"Language: {language}. "
         "Include morning, afternoon, and evening plans with times and local food suggestions. "
         "Cover both popular and offbeat places. Format it day-wise, use bullet points. No prices."
     )
@@ -43,26 +45,35 @@ def generate_itinerary(location, days, month, budget, activities, travel_compani
         st.error(f"⚠️ OpenAI API Error: {str(e)}")
         return None
 
-# ✅ Remove non-ASCII characters for PDF
-def remove_non_ascii(text):
-    return unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8')
-
-# ✅ Create PDF (Arial font avoids font errors)
+# ✅ PDF Creation with Unicode Font
 def create_pdf(itinerary, location, days, month):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", 'B', 16)
+
+    # ✅ Add Unicode Font (DejaVuSans.ttf)
+    font_path = "DejaVuSans.ttf"
+    if os.path.exists(font_path):
+        pdf.add_font("DejaVu", '', font_path, uni=True)
+        pdf.set_font("DejaVu", '', 14)
+    else:
+        st.warning("⚠️ Font file DejaVuSans.ttf not found. Using Arial as fallback.")
+        pdf.set_font("Arial", size=12)
+
+    # ✅ Add Title
+    pdf.set_font_size(16)
     pdf.cell(200, 10, txt=f"{days}-Day Itinerary for {location} ({month})", ln=True, align='C')
     pdf.ln(10)
-    itinerary_clean = remove_non_ascii(itinerary)
-    pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, itinerary_clean)
-    return pdf.output(dest='S').encode('latin-1')
+
+    # ✅ Add Itinerary Content
+    pdf.set_font_size(12)
+    pdf.multi_cell(0, 10, itinerary)
+
+    return pdf.output(dest='S').encode('latin-1', 'ignore')
 
 # ✅ Main App Logic
 def main():
-    st.title("🌍 AI Travel Itinerary Generator ✈️")
-    st.subheader("Plan your dream trip with GPT-4 Turbo!")
+    st.title("🌍 Travel Itinerary Generator ✈️")
+    st.subheader("Plan your dream trip in any language!")
 
     if "itinerary" not in st.session_state:
         st.session_state["itinerary"] = None
@@ -76,11 +87,13 @@ def main():
     activities = st.multiselect("🎯 Preferred Activities:",
                                 ["Adventure", "Relaxation", "Cultural", "Sightseeing", "Food Tour"])
     travel_companion = st.selectbox("👥 Traveling With:", ["Solo", "Couple", "Family", "Friends"])
+    language = st.selectbox("🌐 Language:",
+                            ["English", "Spanish", "French", "German", "Hindi", "Bengali", "Chinese", "Japanese"])
 
     if st.button("🚀 Generate Itinerary"):
         if location.strip():
             st.session_state["itinerary"] = None
-            itinerary = generate_itinerary(location, days, month, budget, activities, travel_companion)
+            itinerary = generate_itinerary(location, days, month, budget, activities, travel_companion, language)
             if itinerary:
                 st.session_state["itinerary"] = itinerary
                 st.success("✅ Your itinerary is ready!")
@@ -93,6 +106,6 @@ def main():
         st.download_button("📥 Download PDF", data=pdf_bytes,
                            file_name=f"{location}_Itinerary.pdf", mime="application/pdf")
 
-# ✅ Run App
+# ✅ Run the App
 if __name__ == "__main__":
     main()
